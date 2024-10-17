@@ -1,8 +1,11 @@
 # MultiModalBot
 
-https://github.com/user-attachments/assets/be1ee618-79fa-4cb4-9efd-7289a2944232
+[![Donate via Ko-Fi](https://img.shields.io/badge/Donate-Ko--fi-red?logo=ko-fi&style=for-the-badge)](https://ko-fi.com/rejekts)
 
 MultiModalBot is an advanced AI-powered chatbot that can understand and process multiple types of input, including text, images, and audio. This versatile bot is designed to provide intelligent responses and assist users across various domains.
+
+https://github.com/user-attachments/assets/be1ee618-79fa-4cb4-9efd-7289a2944232
+
 
 ## Features
 
