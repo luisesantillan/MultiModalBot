@@ -74,7 +74,7 @@ def handle_message(message):
             with open('client_voice.mp3', 'rb') as voice_note:
                 bot.send_voice(message.chat.id, voice_note)
         elif segment.startswith('[i]'):
-            image_url = f"https://image.pollinations.ai/prompt/{segment.replace('[i]','').strip()}"
+            image_url = f"https://image.pollinations.ai/prompt/{segment.replace('[i]','').replace(" ","+").strip()}"
             with open("image.png", "wb") as f:
                 f.write(requests.get(image_url).content)
             with open("image.png", "rb") as f:

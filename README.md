@@ -19,3 +19,47 @@ To install MultiModalBot, follow these steps:
 git clone https://github.com/luisesantillan/MultiModalBot.git
 cd MultiModalBot
 pip install -r requirements.txt
+```
+
+## Usage
+
+Setting up your own MultiModalBot is super easy and fun! Just follow these simple steps:
+
+1. Create a new file called `.env` in the MultiModalBot folder.
+
+2. Open the `.env` file and add your secret bot token and openai api key like this:
+
+TELEGRAM_BOT_TOKEN=your_secret_token_here
+OPENAI_API_KEY=your_secret_api_key_here
+
+3. Save the `.env` file and close it.
+
+4. Open your computer's terminal or command prompt.
+
+5. Go to the MultiModalBot folder by typing:
+```bash
+cd MultiModalBot
+```
+
+6. Start your awesome bot by typing:
+```bash
+python start_telegram_bot.py
+```
+
+Your bot is now ready! Open Telegram and start chatting with it.
+
+Cool things you can do with your bot:
+
+- Send text messages, and it will reply accordingly!
+- Send pictures, and it will tell you what it sees!
+- Send voice messages, and it will understand what you say!
+- Type /speak followed by some text, and it will speak that back to you!
+- Type /model followed by a model name to change the openai model used for text generation.
+
+Cool things the bot can do:
+
+- Understand and respond to text messages
+- Understand and respond to images
+- Understand and respond to voice messages
+- Speak back to you in text or voice
+- Send images based on text prompts
