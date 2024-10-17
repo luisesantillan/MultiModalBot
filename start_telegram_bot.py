@@ -7,6 +7,7 @@ from argparse import ArgumentParser
 import base64
 import requests
 import re
+import time
 load_dotenv()
 
 llm = 'gpt-4o-mini'
@@ -82,4 +83,9 @@ def handle_message(message):
         else:
             bot.send_message(message.chat.id, segment.replace('[t]','').strip())
 
-bot.polling()
+while True:
+    try:
+        bot.polling(none_stop=True)
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        time.sleep(5)
