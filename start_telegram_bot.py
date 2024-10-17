@@ -1,5 +1,5 @@
 from telebot import TeleBot
-from responses import get_openai_response, describe_image, text_to_speech, speech_to_text
+from responses import get_openai_response, describe_image, text_to_speech, speech_to_text, get_gemini_response
 from memory import MemoryManager
 from dotenv import load_dotenv
 import os
@@ -10,7 +10,7 @@ import re
 import time
 load_dotenv()
 
-llm = 'gpt-4o-mini'
+llm = 'gemini-1.5-flash'
 argparser = ArgumentParser(description='Telegram Bot')
 argparser.add_argument('--clear',action='store_true', help='Clear history', default=False)
 args = argparser.parse_args()
@@ -33,6 +33,10 @@ def speak(message):
 def change_model(message):
     global llm
     llm = message.text.replace('/model', '')
+    if llm == 'default' or llm == 'gemini':
+        llm = 'gemini-1.5-flash'
+    elif llm == "openai":
+        llm = 'gpt-4o-mini'
     print(f'Model changed to "{llm}".')
 
 @bot.message_handler(content_types=['text', 'sticker', 'pinned_message', 'photo', 'audio','voice'])
@@ -63,10 +67,14 @@ def handle_message(message):
         print('No text found in message.')
         return
     manager.add_message({'role': 'user', 'content': text})
-    response = get_openai_response(list(manager.memory),model=llm)
+    if "gpt" in llm:
+        response = get_openai_response(list(manager.memory),model=llm)
+    else:
+        response = get_gemini_response(list(manager.memory),model=llm)
+    print(f"Addinng response to memory: {response}")
     manager.add_message({'role': 'assistant', 'content': response})
-    split_responses = re.findall(r'(\[\w\].*?)(?=\[\w\]|\Z)', response)
-    print(split_responses)
+    split_responses = re.findall(r'\[\w\].*', response)
+    print(f"Split responses: {split_responses}")
     for segment in split_responses:
         if segment == '':
             continue
@@ -83,9 +91,4 @@ def handle_message(message):
         else:
             bot.send_message(message.chat.id, segment.replace('[t]','').strip())
 
-while True:
-    try:
-        bot.polling(none_stop=True)
-    except Exception as e:
-        print(f"An error occurred: {e}")
-        time.sleep(5)
+bot.polling()
