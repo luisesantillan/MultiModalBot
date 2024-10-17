@@ -9,7 +9,7 @@ import requests
 import re
 load_dotenv()
 
-llm = 'gpt-4o-mini'
+llm = 'gemini-1.5-flash'
 argparser = ArgumentParser(description='Telegram Bot')
 argparser.add_argument('--clear',action='store_true', help='Clear history', default=False)
 args = argparser.parse_args()
