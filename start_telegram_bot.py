@@ -1,4 +1,4 @@
-from telebot import TeleBot
+from telebot import TeleBot, util
 from responses import get_openai_response, describe_image, text_to_speech, speech_to_text, get_gemini_response
 from memory import MemoryManager
 from dotenv import load_dotenv
@@ -72,7 +72,7 @@ def handle_message(message):
         response = get_gemini_response(list(manager.memory),model=llm)
     print(f"Addinng response to memory: {response}")
     manager.add_message({'role': 'assistant', 'content': response})
-    split_responses = re.findall(r'\[\w\].*', response)
+    split_responses = re.findall(r'\[\w\].*?(?=\[\w\]|$)', response, re.DOTALL)
     print(f"Split responses: {split_responses}")
     for segment in split_responses:
         if segment == '':
@@ -88,6 +88,10 @@ def handle_message(message):
             with open("image.png", "rb") as f:
                 bot.send_photo(message.chat.id, f)
         else:
-            bot.send_message(message.chat.id, segment.replace('[t]','').strip())
+            final_text = segment.replace('[t]','').strip()
+            split_text = util.split_string(final_text, 1000)
+            for t in split_text:
+                print(f"Sending message: {t}")
+                bot.send_message(message.chat.id, t)
 
 bot.polling()
