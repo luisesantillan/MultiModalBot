@@ -7,10 +7,9 @@ from argparse import ArgumentParser
 import base64
 import requests
 import re
-import time
 load_dotenv()
 
-llm = 'gemini-1.5-flash'
+llm = 'gpt-4o-mini'
 argparser = ArgumentParser(description='Telegram Bot')
 argparser.add_argument('--clear',action='store_true', help='Clear history', default=False)
 args = argparser.parse_args()
@@ -25,14 +24,14 @@ def start(message):
 
 @bot.message_handler(commands=['speak'])
 def speak(message):
-    text_to_speech(message.text.replace('/speak', ''))
+    text_to_speech(message.text.replace('/speak ', ''))
     with open('speech.mp3', 'rb') as f:
         bot.send_voice(message.chat.id, f)
 
 @bot.message_handler(commands=['model'])
 def change_model(message):
     global llm
-    llm = message.text.replace('/model', '')
+    llm = message.text.replace('/model ', '')
     if llm == 'default' or llm == 'gemini':
         llm = 'gemini-1.5-flash'
     elif llm == "openai":
