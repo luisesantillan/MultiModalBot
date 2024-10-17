@@ -35,9 +35,9 @@ Setting up your own MultiModalBot is super easy and fun! Just follow these simpl
 
 2. Open the `.env` file and add your secret bot token and openai api key like this:
 
-TELEGRAM_BOT_TOKEN=your_secret_token_here
-
-OPENAI_API_KEY=your_secret_api_key_here
+TELEGRAM_BOT_TOKEN=your_bot_token_here
+GOOGLE_API_KEY=your_gemini_api_key_here
+OPENAI_API_KEY=your_openai_api_key_here
 
 3. Save the `.env` file and close it.
 

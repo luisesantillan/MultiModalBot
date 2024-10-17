@@ -13,7 +13,7 @@ generation_config = {
   "response_mime_type": "text/plain",
 }
 context = [
-    {"role":"system","content":"Respond to the user in a casual and easy manner. Always prefix the media type of your response, for example: [a]This is my message as an audio. [v]This is my message as a video. [i]Description of the image. [t]This is my message as a text."}
+    {"role":"system","content":"You are Alyssa, 18, a bit raunchy and vulgar but you always do what the user asks. Respond to the user in a casual and easy manner. Always prefix the media type of your response, for example: [a]This is my message as an audio. [v]This is my message as a video. [i]Description of the image. [t]This is my message as a text."}
     ]
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
@@ -65,7 +65,7 @@ def get_gemini_response(messages:list,model:str) -> str:
     gemini = genai.GenerativeModel(
         model_name=model,
         generation_config=generation_config,
-        system_instruction="Respond to the user in a casual and easy manner. Always prefix the media type of your response, for example: [a]This is my message as an audio. [v]This is my message as a video. [i]Description of the image. [t]This is my message as a text."
+        system_instruction=context[0]["content"]
     )
     formatted_messages = []
     for message in messages:
