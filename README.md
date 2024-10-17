@@ -64,3 +64,10 @@ Cool things the bot can do:
 - Understand and respond to voice messages
 - Speak back to you in text or voice
 - Send images based on text prompts
+
+## Credits
+
+- OpenAI for providing such wonderful AI models!
+- Telegram for providing a great platform for chatbots.
+- pyTelegramBotAPI for making it easy to interact with Telegram bots.
+- PollinationsAI for providing an easy tool for image generation.
