@@ -74,6 +74,9 @@ def handle_message(message):
     manager.add_message({'role': 'assistant', 'content': response})
     split_responses = re.findall(r'\[\w\].*?(?=\[\w\]|$)', response, re.DOTALL)
     print(f"Split responses: {split_responses}")
+    if len(split_responses) == 0:
+        bot.send_message(message.chat.id, response)
+        return
     for segment in split_responses:
         if segment == '':
             continue
