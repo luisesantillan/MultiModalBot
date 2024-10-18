@@ -87,7 +87,12 @@ def change_model(message):
     elif "gem" in name:
         llm = name
     else:
-        llm = get_openai_models(name)
+        try:
+            llm = get_openai_models(name)
+        except Exception as e:
+            print(e)
+            print(f'Model "{name}" not found. Using default model.')
+            llm = 'gpt-4o-mini'
     print(f'Model changed to "{llm}".')
     with open(settings_file, "r", encoding="utf-8") as f:
         settings = json.load(f)

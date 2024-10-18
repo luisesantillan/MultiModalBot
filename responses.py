@@ -1,7 +1,7 @@
 from openai import OpenAI
 from dotenv import load_dotenv
 from pathlib import Path
-import os
+import os, json
 import google.generativeai as genai
 from google.generativeai.types import HarmCategory, HarmBlockThreshold
 
@@ -101,13 +101,16 @@ def get_openai_models(get=None) -> list | str:
         if get is not None:
             if get in model_name:
                 found_model = model_name
+                print(f"Found model: {model_name}")
                 return found_model
-        else:
-            if model_name is not None: 
-                models.append(model_name)
-    if get:
-        if found_model is None:
-            print(f"Model {get} not found. Using default model gpt-4o-mini.")
-            return "gpt-4o-mini"
-        
-    return models
+            else:
+                continue
+        else: 
+            models.append(model_name)
+            print(f"Found models: {models}")
+            return models
+    if found_model is None:
+        print(f"No model found for {get}. Using default model.")
+        with open("settings.json", "r", encoding="utf-8") as f:
+            settings = json.load(f)
+        return settings["model"]
