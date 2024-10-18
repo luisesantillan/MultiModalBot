@@ -163,3 +163,4 @@ cython_debug/
 *.mp3
 *.png
 *.jsonl
+c*.json

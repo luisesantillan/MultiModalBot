@@ -2,13 +2,13 @@ from telebot import TeleBot, util
 from responses import get_openai_response, describe_image, text_to_speech, speech_to_text, get_gemini_response, get_openai_models
 from memory import MemoryManager
 from dotenv import load_dotenv
-import os, json,  base64, re, requests
+import os, json,  base64, re, requests, shutil
 from argparse import ArgumentParser
 from datetime import datetime
 load_dotenv()
-
+settings_file = "settings.json"
 try:
-    with open("settings.json", "r", encoding="utf-8") as f:
+    with open(settings_file, "r", encoding="utf-8") as f:
         settings = json.load(f)
         llm = settings['model']
 except Exception as e:
@@ -25,7 +25,7 @@ manager = MemoryManager(clear=clear)
 
 def get_context(change_user_context:str='') -> list:
     try:
-        with open("settings.json", "r", encoding="utf-8") as f:
+        with open(settings_file, "r", encoding="utf-8") as f:
             settings = json.load(f)
     except Exception as e:
         print(f"Error reading settings.json: {e}")
@@ -40,11 +40,20 @@ def get_context(change_user_context:str='') -> list:
         {"role":"system","content":f"{date}. {time}. {change_user_context} {settings['system_prompt']}"}
         ]
     settings['user_context'][0]['content'] = change_user_context
-    with open("settings.json", "w", encoding="utf-8") as f:
+    with open(settings_file, "w", encoding="utf-8") as f:
         json.dump(settings, f, indent=4)
     print(f"User context changed to: {change_user_context}")
     print(f"Actual context sent: {context}")
     return context
+
+@bot.message_handler(commands=['load'])#Load custom settings.json
+def load(message):
+    global settings_file
+    settings_file = message.text.replace('/load ', '')+'.json'
+    print(f'Settings file changed to "{settings_file}". This will be used in this session.')
+    if not os.path.exists(settings_file):
+        print(f"Creating new settings file: {settings_file}")
+        shutil.copyfile('settings.json', settings_file)
 
 @bot.message_handler(commands=['show'])
 def show(message):
@@ -80,9 +89,9 @@ def change_model(message):
     else:
         llm = get_openai_models(name)
     print(f'Model changed to "{llm}".')
-    with open("settings.json", "r", encoding="utf-8") as f:
+    with open(settings_file, "r", encoding="utf-8") as f:
         settings = json.load(f)
-    with open("settings.json", "w", encoding="utf-8") as f:
+    with open(settings_file, "w", encoding="utf-8") as f:
         settings['model'] = llm
         json.dump(settings, f, indent=4)
 
