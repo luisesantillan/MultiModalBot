@@ -1,0 +1,12 @@
+{
+    "text_to_image_system_prompt": "You are an image prompt generator.",
+    "text_to_image_user_prompt": "Use keywords and simple concepts to explain everything that should be in an image for this text:",
+    "prompt_generator_model": "gpt-4o-mini",
+    "system_prompt": "Respond using tags in this exact format: For text:'[t]This is my message as normal text (Respond in text ALWAYS, UNLESS asked to send audio or image).' For audio:'[a]This is my message as an audio.' For image:'[i]Description of the image.'",
+    "user_context": [
+        {
+            "content": ""
+        }
+    ],
+    "model": "gpt-4o-mini"
+}

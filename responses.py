@@ -14,6 +14,7 @@ generation_config = {
   "max_output_tokens": 8192,
   "response_mime_type": "text/plain",
 }
+
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 def text_to_speech(text:str):
@@ -51,16 +52,17 @@ def describe_image(encoded_image) -> str:
     print(f"Caption received from OpenAI: {response.choices[0].message.content}")
     return response.choices[0].message.content
 
-def get_openai_response(messages:list,context:list,model:str="gpt-4o-mini") -> str:
+def get_openai_response(messages:list,context:list=[],model:str="gpt-4o-mini",temperature=1) -> str:
     print("Getting response from OpenAI...")
     response = client.chat.completions.create(
         model=model,
         messages=context+messages,
+        temperature=temperature,
     )
     print(f"Response received from OpenAI: {response.choices[0].message.content}")
     return response.choices[0].message.content
 
-def get_gemini_response(messages:list,context:list,model:str="gemini-1.5-flash") -> str:
+def get_gemini_response(messages:list,context:list=[{'content':''}],model:str="gemini-1.5-flash") -> str:
     if not "tuned" in model:
         gemini = genai.GenerativeModel(
             model_name=model,
@@ -89,3 +91,23 @@ def get_gemini_response(messages:list,context:list,model:str="gemini-1.5-flash")
         return ""
     print(f"Response received from Gemini: {response.text}")
     return response.text
+
+def get_openai_models(get=None) -> list | str:
+    print(f'Getting {str(get)}')
+    models = []
+    found_model = None
+    for model in client.fine_tuning.jobs.list().data:
+        model_name = model.fine_tuned_model
+        if get is not None:
+            if get in model_name:
+                found_model = model_name
+                return found_model
+        else:
+            if model_name is not None: 
+                models.append(model_name)
+    if get:
+        if found_model is None:
+            print(f"Model {get} not found. Using default model gpt-4o-mini.")
+            return "gpt-4o-mini"
+        
+    return models
