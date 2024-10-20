@@ -3,9 +3,13 @@ from dotenv import load_dotenv
 from pathlib import Path
 import os, json
 import google.generativeai as genai
-from google.generativeai.types import HarmCategory, HarmBlockThreshold
-
+import requests
+from datetime import datetime
 load_dotenv()
+
+with open("settings.json", "r", encoding="utf-8") as f:
+            settings = json.load(f)
+
 genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 generation_config = {
   "temperature": 1,
@@ -14,12 +18,11 @@ generation_config = {
   "max_output_tokens": 8192,
   "response_mime_type": "text/plain",
 }
-
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-def text_to_speech(text:str):
+def text_to_speech(text:str,filename:str):
     print("Generating TTS...")
-    speech_file_path = Path(__file__).parent / "client_voice.mp3"
+    speech_file_path = Path(__file__).parent / filename
     response = client.audio.speech.create(
         model="tts-1",
         voice="nova",
@@ -50,16 +53,6 @@ def describe_image(encoded_image) -> str:
                 ]
         )
     print(f"Caption received from OpenAI: {response.choices[0].message.content}")
-    return response.choices[0].message.content
-
-def get_openai_response(messages:list,context:list=[],model:str="gpt-4o-mini",temperature=1) -> str:
-    print("Getting response from OpenAI...")
-    response = client.chat.completions.create(
-        model=model,
-        messages=context+messages,
-        temperature=temperature,
-    )
-    print(f"Response received from OpenAI: {response.choices[0].message.content}")
     return response.choices[0].message.content
 
 def get_gemini_response(messages:list,context:list=[{'content':''}],model:str="gemini-1.5-flash") -> str:
@@ -111,6 +104,4 @@ def get_openai_models(get=None) -> list | str:
             return models
     if found_model is None:
         print(f"No model found for {get}. Using default model.")
-        with open("settings.json", "r", encoding="utf-8") as f:
-            settings = json.load(f)
         return settings["model"]

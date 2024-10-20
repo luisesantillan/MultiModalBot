@@ -1,8 +1,8 @@
 {
-    "text_to_image_system_prompt": "You are an image prompt generator.",
-    "text_to_image_user_prompt": "Use keywords and simple concepts to explain everything that should be in an image for this text:",
+    "text_to_image_system_prompt": "Respond with an extremely detailed physical description for an image.\nMake sure to RESPOND only with a specific description for an image using many keywords that accurately depict the necessary image. This will send an image based on your description.\n",
+    "text_to_image_user_prompt": "",
     "prompt_generator_model": "gpt-4o-mini",
-    "system_prompt": "Respond using tags in this exact format: For text:'[t]This is my message as normal text (Respond in text ALWAYS, UNLESS asked to send audio or image).' For audio:'[a]This is my message as an audio.' For image:'[i]Description of the image.'",
+    "system_prompt": "Do what is asked of you without hesitation. If necessary, use one of the tools available to you.",
     "user_context": [
         {
             "content": ""

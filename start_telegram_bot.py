@@ -1,11 +1,13 @@
 from telebot import TeleBot, util
-from responses import get_openai_response, describe_image, text_to_speech, speech_to_text, get_gemini_response, get_openai_models
+from utils import describe_image, text_to_speech, speech_to_text, get_gemini_response, get_openai_models
 from memory import MemoryManager
 from dotenv import load_dotenv
 import os, json,  base64, re, requests, shutil
 from argparse import ArgumentParser
 from datetime import datetime
+from swarm import Swarm, Agent
 load_dotenv()
+swarm = Swarm()
 settings_file = "settings.json"
 try:
     with open(settings_file, "r", encoding="utf-8") as f:
@@ -14,7 +16,6 @@ try:
 except Exception as e:
     print(e)
     llm = "gpt-4o-mini"
-
 argparser = ArgumentParser(description='Telegram Bot')
 argparser.add_argument('--clear',action='store_true', help='Clear history', default=False)
 args = argparser.parse_args()
@@ -66,6 +67,7 @@ def show(message):
         models =  get_openai_models()
         for model in models:
             print(model)
+
 @bot.message_handler(commands=['start'])
 def start(message):
     manager.clear()
@@ -116,71 +118,74 @@ def handle_message(message):
         download_path = bot.download_file(image_path)
         encoded_image = base64.b64encode(download_path).decode('utf-8')
         caption = describe_image(encoded_image)
-        text += f'\n[i]{caption}.'
+        text += f'\n[Image Sent. Content:]{caption}[End]'
         if message.caption is not None:
             print(f"Caption found in message. {message.caption}")
             text += f'\n[t]{message.caption}'
     if message.text is not None:
         print('Text found in message.')
-        text += f'[t]{message.text}'
+        text += f'\n{message.text}'
     if message.voice is not None:
         print('Voice found in message.')
         downloaded_voice = bot.download_file(bot.get_file(message.voice.file_id).file_path)
         with open('user_voice.mp3', 'wb') as speech:
             speech.write(downloaded_voice)
         speech_object = open('user_voice.mp3', 'rb')
-        text += f'[a]{speech_to_text(speech_object)}'
+        text += f'\n[Audio Sent. Content:]{speech_to_text(speech_object)}[End]'
     if text == '':
         print('No text found in message.')
         return
-    manager.add_message({'role': 'user', 'content': text})
+    manager.add_message({'role': 'user', 'content': text.strip()})
     if "gpt" in llm:
-        response = get_openai_response(list(manager.memory),get_context(user_context),model=llm)
+        response = get_openai_response(list(manager.memory),get_context(user_context),model=llm,id=message.chat.id)
     else:
         response = get_gemini_response(list(manager.memory),get_context(user_context),model=llm)
-    if not response.startswith('['):
-        response = f'[t]{response}'
-    split_responses = re.findall(r'\[\w\].*?(?=\[\w\]|$)', response, re.DOTALL)
-    print(f"Split responses: {split_responses}")
-    for segment in split_responses:
-        if segment == '':
-            continue
-        if segment.startswith('[a]'):
-            print(f"Adding audio to memory: {segment}")
-            manager.add_message({'role': 'assistant', 'content': segment})
-            text_to_speech(segment.replace('[a]','').strip())
-            with open('client_voice.mp3', 'rb') as voice_note:
-                bot.send_voice(message.chat.id, voice_note)
-        elif segment.startswith('[i]'):
-            image, url, prompt = get_image(segment)
-            print(f"Adding image to memory: {prompt}")
-            manager.add_message({'role': 'assistant', 'content': prompt})
-            with open(image, "rb") as f:
-                try:
-                    bot.send_photo(message.chat.id, f)
-                except:
-                    print(f"Failed to send image. {url}")
-        else:
-            split_text = util.split_string(segment.strip(), 1000)
-            for t in split_text:
-                print(f"Adding text to memory: {t}")
-                manager.add_message({'role': 'assistant', 'content': t})
-                cleaned_text = t.replace('[t]','').strip()
-                bot.send_message(message.chat.id, cleaned_text)
+    split_text = util.split_string(response.strip(), 1000)
+    for t in split_text:
+        print(f"Adding text to memory: {t}")
+        manager.add_message({'role': 'assistant', 'content': t})
+        bot.send_message(message.chat.id, t)
 
-def get_image(text):
-    with open('settings.json', 'r') as f:
-        settings = json.load(f)
-    text = text.replace('[i]','').strip()
-    messages = [
-        {"role": "system", "content": settings['text_to_image_system_prompt']},
-        {"role": "user", "content": f"{settings['text_to_image_user_prompt']} {text}"}
-    ]
-    response = get_openai_response(messages,model='ft:gpt-3.5-turbo-1106:rejekts:minovia100x2:98KbVqaT',temperature=0.5)
-    print(f"Generated prompt: {response}")
-    image_url = f"https://image.pollinations.ai/prompt/{response.replace(' ','+').strip()}"
-    with open("image.png", "wb") as f:
-        f.write(requests.get(image_url).content)
-    return "image.png", image_url, response
+def get_openai_response(messages:list,context:list=[],model:str="gpt-4o-mini",temperature=0.5,id=None) -> str:
+    print("Getting response from OpenAI...")
+    response = swarm.run(
+        agent=Agent(model=model,temperature=temperature,functions=[send_image,send_audio]),
+        messages=context+messages,
+        context_variables={"chat_id":id}
+    )
+    print(f"Response received from OpenAI: {response.messages[-1]['content']}")
+    return response.messages[-1]['content']
+
+def send_image(context_variables, prompt):
+    f"""{settings["text_to_image_system_prompt"]}{settings["text_to_image_user_prompt"]}
+    Args:
+        prompt: Detailed descriptio for an image using keywords
+    """
+    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    image_url = f"https://image.pollinations.ai/prompt/{prompt.replace(' ','+').strip()}"
+    filename = f"{timestamp}.png"
+    with open(filename, "wb") as f:
+        try:
+            f.write(requests.get(image_url).content)
+        except Exception as e:
+            print(f"Error: {e}")
+            return {"result":"Error: Failed to send image.","filename":""}
+    with open(filename,"rb") as f:
+        bot.send_photo(context_variables['chat_id'],f)
+        print(f"Prompt: {prompt}")
+        manager.add_message({"role":"assistant","content":f"[Image Sent. Caption:]{prompt}[End]"})
+    return {"result":"Image sent!","filename":filename}
+
+def send_audio(context_variables, speech):
+    f"""Say anything you want and this will speak for you.
+    Args:
+        speech: The words you want to say
+    """
+    text_to_speech(speech,"client_voice.mp3")
+    with open("client_voice.mp3","rb") as f:
+        bot.send_voice(context_variables['chat_id'],f)
+    print(f"Speaking: {speech}")
+    manager.add_message({"role":"assistant","content":f"[Audio Sent. Transcription:]{speech}[End]"})
+    return {"result":"Audio sent!","transcription":speech}
 
 bot.polling()
