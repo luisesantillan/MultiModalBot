@@ -2,12 +2,12 @@ from telebot import TeleBot, util
 from utils import describe_image, text_to_speech, speech_to_text, get_gemini_response, get_openai_models
 from memory import MemoryManager
 from dotenv import load_dotenv
-import os, json,  base64, re, requests, shutil
+import os, json,  base64, requests, shutil
 from argparse import ArgumentParser
 from datetime import datetime
 from swarm import Swarm, Agent
 load_dotenv()
-swarm = Swarm()
+swarm = Swarm(os.getenv("OPENAI_API_KEY"))
 settings_file = "settings.json"
 try:
     with open(settings_file, "r", encoding="utf-8") as f:
