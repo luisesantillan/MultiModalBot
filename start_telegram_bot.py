@@ -7,8 +7,19 @@ from argparse import ArgumentParser
 from datetime import datetime
 from swarm import Swarm, Agent
 load_dotenv()
-swarm = Swarm(os.getenv("OPENAI_API_KEY"))
-settings_file = "settings.json"
+
+os.environ["OPENAI_API_KEY"]=os.getenv("OPENAI_API_KEY")
+swarm = Swarm()
+argparser = ArgumentParser(description='Telegram Bot')
+argparser.add_argument('--clear',action='store_true', help='Clear history', default=False)
+argparser.add_argument('--load', type=str, help='Path of the settings.json', default='settings.json')
+args = argparser.parse_args()
+settings_file = args.load
+clear = args.clear
+user_context = ""
+bot = TeleBot(token=os.getenv('TELEGRAM_BOT_TOKEN'))
+manager = MemoryManager(clear=clear)
+
 try:
     with open(settings_file, "r", encoding="utf-8") as f:
         settings = json.load(f)
@@ -16,21 +27,14 @@ try:
 except Exception as e:
     print(e)
     llm = "gpt-4o-mini"
-argparser = ArgumentParser(description='Telegram Bot')
-argparser.add_argument('--clear',action='store_true', help='Clear history', default=False)
-args = argparser.parse_args()
-clear = args.clear
-user_context = ""
-bot = TeleBot(token=os.getenv('TELEGRAM_BOT_TOKEN'))
-manager = MemoryManager(clear=clear)
 
 def get_context(change_user_context:str='') -> list:
     try:
         with open(settings_file, "r", encoding="utf-8") as f:
             settings = json.load(f)
     except Exception as e:
-        print(f"Error reading settings.json: {e}")
-        raise FileNotFoundError("settings.json file not found. Please ensure the settings file exists in the correct location.")
+        print(f"Error reading {settings_file}: {e}")
+        raise FileNotFoundError(f"{settings_file} file not found. Please ensure the settings file exists in the correct location.")
     date = datetime.now().strftime("%B %d, %Y")
     time = datetime.now().strftime("%I:%M %p")
     if change_user_context == '':
@@ -146,7 +150,7 @@ def handle_message(message):
         manager.add_message({'role': 'assistant', 'content': t})
         bot.send_message(message.chat.id, t)
 
-def get_openai_response(messages:list,context:list=[],model:str="gpt-4o-mini",temperature=0.5,id=None) -> str:
+def get_openai_response(messages:list,context:list=[],model:str="gpt-4o-mini",temperature=0.6,id=None) -> str:
     print("Getting response from OpenAI...")
     response = swarm.run(
         agent=Agent(model=model,temperature=temperature,functions=[send_image,send_audio]),
