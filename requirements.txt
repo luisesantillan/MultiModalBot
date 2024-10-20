@@ -1,4 +1,5 @@
 openai
+git+https://github.com/openai/swarm.git
 pyTelegramBotAPI
 python-dotenv
 google-generativeai
